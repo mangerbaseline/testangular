@@ -1,0 +1,48 @@
+
+<div *ngIf="orderService.isLoading()" class="global-initial-loader fade-in">
+  <div class="loader-content">
+    <div class="payto-custom-spinner logo-loader">
+      <img src="https://www.kuberfinancial.com.au/tableQR/assets/images/kuber-samal-logo.svg" alt="Loading...">
+    </div>
+    <div class="loader-text-wrap">
+      <h3>Kuber Financial</h3>
+      <p>{{ orderService.loadingMessage() }}</p>
+    </div>
+    <div class="loader-progress-bar">
+      <div class="progress-fill"></div>
+    </div>
+  </div>
+</div>
+
+  
+  <div *ngIf="toastService.message()" class="toast-overlay fade-in">
+    <div class="toast-card" [ngClass]="toastService.type()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+      <span>{{ toastService.message() }}</span>
+    </div>
+  </div>
+
+  @if (showHeaderFooter && !orderService.isError()) {
+  <app-brand-header></app-brand-header>
+  }
+
+  <div class="app-container" [style.visibility]="orderService.isLoading() ? 'hidden' : 'visible'">
+    <app-background-animation></app-background-animation>
+
+    <router-outlet />
+    @if (showHeaderFooter && !orderService.isError()) {
+    <div class="footer-border"></div>
+    <div class="global-footer">
+      <div class="gf-left">
+        Trusted by businesses worldwide for <br /> secure, instant payments
+      </div>
+      <div class="gf-right">
+        Secured by <strong style="color: rgb(212, 180, 0);">Kuber Financial</strong> &middot; All transactions
+        encrypted
+      </div>
+    </div>
+    }
+  </div>

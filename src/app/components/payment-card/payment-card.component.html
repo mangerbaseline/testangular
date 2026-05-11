@@ -1,0 +1,571 @@
+<div class="sidebar-root" *ngIf="!orderService.isError()">
+
+
+  <div class="flex items-center justify-center gap-2 mb-8"
+    style="display:flex; justify-content:center; align-items:center; gap: 12px; margin-bottom: 32px;">
+    <!-- <div style="display:flex; align-items:center;">
+      <div [style.background]="isStepActive(1) ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)'" [style.color]="isStepActive(1) ? '#10b981' : '#94a3b8'" style="display:flex; align-items:center; gap: 8px; padding: 8px 16px; border-radius: 9999px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><rect width="20" height="14" x="2" y="5" rx="2"></rect><line x1="2" x2="22" y1="10" y2="10"></line></svg>
+        <span class="step-text" style="font-size:14px; font-weight:500;">Card Details</span>
+      </div>
+      <div style="width:32px; height:2px; margin: 0 8px; background: rgba(255,255,255,0.1);"></div>
+    </div> -->
+    <div style="display:flex; align-items:center;">
+      <div [style.background]="isStepActive(1) ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)'"
+        [style.color]="isStepActive(2) ? '#10b981' : '#94a3b8'"
+        style="display:flex; align-items:center; gap: 8px; padding: 8px 16px; border-radius: 9999px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          style="width:16px; height:16px;">
+          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span class="step-text" style="font-size:14px; font-weight:500;">Verification</span>
+      </div>
+      <div style="width:185px; height:2px; margin: 0 8px; background: rgba(255,255,255,0.1);"></div>
+    </div>
+    <div style="display:flex; align-items:center;">
+      <div [style.background]="isStepActive(2) ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)'"
+        [style.color]="isStepActive(3) ? '#10b981' : '#94a3b8'"
+        style="display:flex; align-items:center; gap: 8px; padding: 8px 16px; border-radius: 9999px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          style="width:16px; height:16px;">
+          <path d="M21.801 10A10 10 0 1 1 17 3.335"></path>
+          <path d="m9 11 3 3L22 4"></path>
+        </svg>
+        <span class="step-text" style="font-size:14px; font-weight:500;">Complete</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="method-tabs-section">
+    <p class="section-title">{{ methods.length === 1 ? 'Payment method' : 'Choose payment method' }}</p>
+    <div class="method-tabs">
+      <button *ngFor="let m of methods" [class.selected]="selectedMethod() === m.id"
+        [class.disabled-tab]="m.id === 'upi' || m.id === 'bank'" (click)="selectMethod(m.id)" class="method-tab"
+        [style.--m-color]="m.color">
+        <span class="tab-icon" [innerHTML]="m.svg | safeHtml"></span>
+        <div class="tab-text">
+          <span class="tab-name">{{ m.name }}</span>
+          <span *ngIf="m.id === 'upi' || m.id === 'bank'" class="tab-status">Coming Soon</span>
+        </div>
+      </button>
+    </div>
+  </div>
+  <div class="form-area">
+    <div [ngSwitch]="selectedMethod()" class="form-switch">
+      <div *ngSwitchCase="'card'" class="wallet-form fade-in">
+        <div class="wallet-card">
+          <div class="wallet-icon-wrap default-w">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5" width="40">
+              <rect x="1" y="4" width="22" height="16" rx="2" />
+              <path d="M1 10h22" />
+            </svg>
+          </div>
+          <h3>Credit or Debit Card</h3>
+          <p>Enter your card details safely and securely below</p>
+        </div>
+      </div>
+      <div *ngSwitchCase="'apple'" class="wallet-form fade-in">
+        <div class="wallet-card">
+          <div class="wallet-icon-wrap apple-w ">
+            <svg viewBox="0 0 24 24" fill="white" width="36">
+              <path
+                d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83" />
+              <path
+                d="M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+            </svg>
+          </div>
+          <h3>Apple Pay</h3>
+          <p>Use Face ID or Touch ID to complete payment</p>
+        </div>
+      </div>
+      <div *ngSwitchCase="'google'" class="wallet-form fade-in">
+        <div class="wallet-card">
+          <div class="wallet-icon-wrap google-w">
+            <div class="g-dots-row">
+              <div class="gd" style="background:#4285F4"></div>
+              <div class="gd" style="background:#EA4335"></div>
+              <div class="gd" style="background:#FBBC05"></div>
+              <div class="gd" style="background:#34A853"></div>
+            </div>
+          </div>
+          <h3>Google Pay</h3>
+          <p>Use your saved cards to complete payment</p>
+        </div>
+      </div>
+      <div *ngSwitchCase="'bank'" class="payment-form fade-in">
+        <div class="input-group">
+          <label>ACCOUNT NUMBER</label>
+          <div class="icon-input has-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="lucide lucide-building2 w-5 h-5">
+              <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path>
+              <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
+              <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path>
+              <path d="M10 6h4"></path>
+              <path d="M10 10h4"></path>
+              <path d="M10 14h4"></path>
+              <path d="M10 18h4"></path>
+            </svg> <input type="text" placeholder="Enter your account number">
+          </div>
+        </div>
+        <div class="input-group">
+          <label>BSB NUMBER</label>
+          <div class="icon-input">
+            <input type="text" placeholder="000-000">
+          </div>
+        </div>
+        <div class="input-group">
+          <label>ACCOUNT HOLDER NAME</label>
+          <div class="icon-input">
+            <input type="text" placeholder="John Doe">
+          </div>
+        </div>
+      </div>
+      <div *ngSwitchCase="'upi'" class="payment-form fade-in">
+        <div class="input-group" style="margin-bottom: 24px;">
+          <label>UPI ID</label>
+          <div class="icon-input has-icon">
+            <svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="5" y="2" width="14" height="20" rx="2" />
+              <path d="M12 18h.01" />
+            </svg>
+            <input type="text" placeholder="yourname@upi">
+          </div>
+        </div>
+        <div class="glass"
+          style="background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 24px; text-align: center;">
+          <div
+            style="width: 160px; height: 160px; margin: 0 auto 16px; background: white; border-radius: 12px; padding: 12px;">
+            <div
+              style="width: 100%; height: 100%; border-radius: 8px; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr); gap: 2px; padding: 4px;">
+              <div style="border-radius: 1px; background: #111827;"></div>
+              <div style="border-radius: 1px; background: #111827;"></div>
+              <div style="border-radius: 1px; background: #111827;"></div>
+              <div style="border-radius: 1px; background: #111827;"></div>
+              <div style="border-radius: 1px; background: #111827;"></div>
+              <div style="border-radius: 1px; background: #111827;"></div>
+              <div style="border-radius: 1px; background: #111827;"></div>
+              <div style="border-radius: 1px; background: #111827;"></div>
+              <div style="border-radius: 1px; background: #111827;"></div>
+              <div style="border-radius: 1px; background: #111827;"></div>
+              <div style="border-radius: 1px; background: #111827;"></div>
+              <div style="border-radius: 1px; background: #111827;"></div>
+              <div style="border-radius: 1px; background: #111827;"></div>
+              <div style="border-radius: 1px; background: #111827;"></div>
+              <div style="border-radius: 1px; background: #111827;"></div>
+              <div style="border-radius: 1px; background: #111827;"></div>
+              <div style="border-radius: 1px; background: #111827;"></div>
+              <div style="border-radius: 1px; background: #111827;"></div>
+              <div style="border-radius: 1px; background: #111827;"></div>
+              <div style="border-radius: 1px; background: #111827;"></div>
+              <div style="border-radius: 1px; background: #111827;"></div>
+              <div style="border-radius: 1px; background: #111827;"></div>
+              <div style="border-radius: 1px; background: #111827;"></div>
+              <div style="border-radius: 1px; background: #111827;"></div>
+              <div style="border-radius: 1px; background: #111827;"></div>
+            </div>
+          </div>
+          <p style="font-size: 14px; color: var(--text-secondary); margin: 0;">Scan with any UPI app to pay instantly
+          </p>
+        </div>
+      </div>
+      <div *ngSwitchCase="'payto'" class="payto-container fade-in">
+        <!-- Payload State: Input -->
+        <div *ngIf="paytoState() === 'input'">
+          <div class="payto-header-row">
+            <h2 class="payto-main-title">Pay by Bank</h2>
+            <div class="payto-logos-top">
+              <img src="https://backend.kuberfinancial.com.au/tableQR/assets/images/kuber-samal-logo.svg"
+                style="height:15px; object-fit:contain; filter: brightness(0) invert(1);">
+              <img src="images/payto-logo.png" style="height:25px; object-fit:contain;">
+            </div>
+          </div>
+          <p class="payto-sub-desc">
+            Authorize payments instantly using PAY-ID linked to your bank — fast, secure, and hassle-free! It will take
+            2–3 minutes.
+          </p>
+
+          <div class="payid-banner">
+            <img src="images/Payid.png" alt="PayID" style="height: 26px; object-fit: contain; mix-blend-mode: screen;">
+          </div>
+
+          <div class="payto-input-section">
+            <!-- Name Input -->
+            <div class="payto-row">
+              <div class="payto-label-pill">Name</div>
+              <div class="payto-input-pill">
+                <input type="text" placeholder="Full Name" [value]="paytoName()"
+                  (input)="paytoName.set($any($event.target).value)">
+              </div>
+            </div>
+
+            <div class="payto-row">
+              <!-- Mobile/PayID Input -->
+              <div class="payto-label-pill">PayID</div>
+              <div class="payto-input-pill" [class.error-border]="paytoValidationMessage()">
+                <input type="text" placeholder="Mobile, Email or PayID" [value]="paytoMobile()"
+                  (input)="handlePaytoInput($event)">
+              </div>
+            </div>
+
+            <div *ngIf="paytoValidationMessage()" class="validation-message-bar fade-in">
+              {{ paytoValidationMessage() }}
+            </div>
+
+            <div class="payto-row">
+              <!-- Email Input -->
+              <div class="payto-label-pill">Email</div>
+              <div class="payto-input-pill email-wrap">
+                <input type="email" placeholder="example@gmail.com" [value]="paytoEmail()"
+                  (input)="paytoEmail.set($any($event.target).value)">
+              </div>
+            </div>
+          </div>
+
+          <div class="bank-logos-footer">
+            <img src="images/ANZ.png" alt="ANZ">
+            <img src="images/Commonwealth.png" alt="CBA">
+            <img src="images/Westpac.png" alt="Westpac">
+            <img src="images/NAB.png" alt="NAB">
+          </div>
+        </div>
+
+        <div *ngIf="paytoState() === 'authorizing'" class="payto-authorizing-overlay fade-in">
+          <div class="auth-spinner-wrap">
+            <div class="payto-custom-spinner logo-loader">
+              <img src="https://backend.kuberfinancial.com.au/tableQR/assets/images/kuber-samal-logo.svg"
+                alt="Loading...">
+            </div>
+            <h3>Authorizing payment...</h3>
+          </div>
+        </div>
+
+
+        <!-- Payload State: Waiting for Approval -->
+        <div *ngIf="paytoState() === 'waiting'" class="payto-waiting-view fade-in">
+          <div class="waiting-active-status">
+            <div class="active-pulse">
+              <div class="pulse-ring"></div>
+              <div class="pulse-dot"></div>
+            </div>
+            <span>Awaiting your approval...</span>
+          </div>
+
+          <div class="waiting-header">
+            <h3>How to Approve Your One-Time Payment</h3>
+            <div class="timer-display" [class.timer-low]="paytoTimerValue() < 60">
+              {{ formatTimer(paytoTimerValue()) }}
+            </div>
+            <button class="cancel-x-btn" (click)="showCancelConfirm.set(true)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="20">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <p class="instruction-main">Open your banking app and search for "PAY-TO" in the app.</p>
+
+          <ol class="steps-list">
+            <li>Locate the payment request from <strong>{{ merchantName() || 'The Merchant' }}</strong> for <strong>{{
+                totalAmount() | currency }}</strong>.</li>
+            <li>Approve the PayTo agreement to authorize the payment.</li>
+            <li>Return to this screen your payment status will update to Success or Failed automatically.</li>
+          </ol>
+
+          <div class="info-note-box">
+            Note: Different banking apps may have PayTo in different sections. If you can't find it, try searching
+            "PAY-TO" in your banking app.
+          </div>
+        </div>
+
+        <!-- Payload State: Failed -->
+        <div *ngIf="paytoState() === 'failed'" class="payto-waiting-view fade-in"
+          style="text-align: center; padding: 40px 20px;">
+          <div style="margin-bottom: 24px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" width="64" style="margin: 0 auto;">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="15" y1="9" x2="9" y2="15" />
+              <line x1="9" y1="9" x2="15" y2="15" />
+            </svg>
+          </div>
+          <h3 style="color: #fff; font-size: 20px; margin-bottom: 12px;">Payment Failed</h3>
+          <p style="color: rgba(255,255,255,0.6); margin-bottom: 32px;">
+            The payment request was unsuccessful or has timed out.
+          </p>
+          <!-- <button class="pay-btn" (click)="paytoState.set('input')" style="max-width: 200px; margin: 0 auto;">Try Again</button> -->
+        </div>
+
+        <!-- Cancel Confirmation Dialog -->
+        <div *ngIf="showCancelConfirm()" class="modal-backdrop fade-in" (click)="showCancelConfirm.set(false)">
+          <div class="cancel-modal" (click)="$event.stopPropagation()">
+            <h2 class="cancel-modal-title">CANCEL PAYMENT REQUEST?</h2>
+            <p class="cancel-modal-desc">Are you sure you want to cancel this payment request? This action cannot be
+              undone.</p>
+            <div class="cancel-modal-actions">
+              <button class="btn-confirm-cancel" (click)="confirmCancel()">Yes, Cancel</button>
+              <button class="btn-continue" (click)="showCancelConfirm.set(false)">No, Continue</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="selectedMethod() === 'zip'" class="wallet-form fade-in">
+        <h2 class="brand-title zip-c">zip</h2>
+        <h3 class="form-title">Buy now, pay later</h3>
+        <p class="form-text">Split your purchase into easy instalments. You'll be redirected to Zip to complete.</p>
+        <!-- <div class="status-badge">
+          <span class="dot"></span> No impact on your credit score
+        </div> -->
+      </div>
+      <div *ngIf="selectedMethod() === 'afterpay'" class="wallet-form fade-in">
+        <h2 class="brand-title ap-c">afterpay</h2>
+        <h3 class="form-title">Buy now, pay later</h3>
+        <p class="form-text">Shop now and pay over time. You'll be redirected to Afterpay to set up your plan.</p>
+        <!-- <div class="status-badge">
+          <span class="dot"></span> No impact on your credit score
+        </div> -->
+      </div>
+      <div *ngIf="selectedMethod() === 'klarna'" class="wallet-form fade-in">
+        <h2 class="brand-title kl-c">Klarna<span>.</span></h2>
+        <h3 class="form-title">Flexible payment options</h3>
+        <p class="form-text">Choose how you want to pay — now, later, or in slices. You'll be redirected to Klarna.</p>
+        <!-- <div class="status-badge">
+          <span class="dot"></span> No impact on your credit score
+        </div> -->
+      </div>
+      <div *ngSwitchCase="'link'" class="wallet-form fade-in">
+        <div class="wallet-card">
+          <div class="wallet-icon-wrap link-w"
+            style="background: #00D66F; padding: 10px; border-radius: 12px; display:flex; align-items:center; justify-content:center;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" width="36" stroke-linecap="round">
+              <path d="M7 8h10M7 12h7M7 16h4"></path>
+            </svg>
+          </div>
+          <h3>Link</h3>
+          <p>Fast, secure 1-click checkout powered by Stripe</p>
+        </div>
+      </div>
+      <div *ngSwitchDefault class="wallet-form fade-in">
+        <div class="wallet-card">
+          <div class="wallet-icon-wrap default-w">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5" width="36">
+              <rect x="1" y="4" width="22" height="16" rx="2" />
+              <path d="M1 10h22" />
+            </svg>
+          </div>
+          <h3>{{ getMethodName() }}</h3>
+          <p>Click below to complete your payment</p>
+        </div>
+      </div>
+    </div>
+    <div id="stripe-payment-element-mount-point" [style.display]="isStripeMethod() ? 'block' : 'none'"
+      style="margin-top: 24px; min-height: 150px; background: rgba(30, 41, 59, 0.3); padding: 16px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); position: relative;">
+      <div *ngIf="isStripeLoading()"
+        style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: rgba(30, 41, 59, 0.5); border-radius: 12px; z-index: 10;">
+        <div class="spinner"></div>
+        <span style="font-size: 13px; color: rgba(255,255,255,0.6);">Setting up secure payment...</span>
+      </div>
+    </div>
+  </div>
+  <div class="cta-section"
+    *ngIf="selectedMethod() !== 'payto' || (paytoState() !== 'waiting' && paytoState() !== 'authorizing')">
+    <button type="button" class="pay-btn" (click)="pay($event)" [class.loading]="isProcessing()">
+      <ng-container *ngIf="!isProcessing()">
+        {{ getCTA() }}
+        <svg *ngIf="getCTA() !== 'Retry'" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"
+          width="18">
+          <path d="M4 10h12M10 4l6 6-6 6" />
+        </svg>
+      </ng-container>
+      <div class="spinner" *ngIf="isProcessing()"></div>
+    </button>
+  </div>
+
+  <div class="order-summary" [class.invoice-mode]="isInvoice()">
+    <button class="summary-header" (click)="toggleSummary()">
+      <div class="sh-left">
+        <div class="bag-icon-wrap" [class.invoice-icon]="isInvoice()">
+          <svg *ngIf="!isInvoice()" viewBox="0 0 24 24" fill="none" width="18" stroke="currentColor" stroke-width="2">
+            <path
+              d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+            <path d="m3.3 7 8.7 5 8.7-5" />
+            <path d="M12 22V12" />
+          </svg>
+          <svg *ngIf="isInvoice()" viewBox="0 0 24 24" fill="none" width="18" stroke="currentColor" stroke-width="2">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+            <line x1="10" y1="9" x2="8" y2="9" />
+          </svg>
+        </div>
+        <div>
+          <div class="sh-title">{{ isInvoice() ? 'Invoice Details' : 'Order Summary' }}</div>
+          <div class="sh-items" *ngIf="(items().length > 0 && !isInvoice()) || (isInvoice() && invoiceNo())">{{
+            isInvoice() ? invoiceNo() : items().length + ' items' }}</div>
+          <div class="sh-items" *ngIf="items().length === 0 && isInvoice() && invoiceNo()">{{ invoiceNo() }}</div>
+        </div>
+      </div>
+      <div class="sh-right">
+        <span class="sh-total">{{ totalAmount() | currency }}</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" class="chev"
+          [class.open]="showSummary()">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </div>
+    </button>
+
+    <div class="summary-body" *ngIf="showSummary()">
+      <div *ngIf="orderService.isLoading()" class="p-6">
+        <div class="skeleton-line mb-3" style="height: 50px; border-radius: 8px;"></div>
+        <div class="skeleton-line" style="height: 50px; border-radius: 8px;"></div>
+      </div>
+      <ng-container *ngIf="!isInvoice() && !orderService.isLoading()">
+        <div class="item-row" *ngFor="let item of items()">
+          <div class="item-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" width="18" stroke="currentColor" stroke-width="2">
+              <path
+                d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+              <path d="m3.3 7 8.7 5 8.7-5" />
+              <path d="M12 22V12" />
+            </svg>
+          </div>
+          <div class="item-body">
+            <div class="item-name">{{ item.name }}</div>
+            <div class="item-desc" *ngIf="item.desc">{{ item.desc }}</div>
+            <div class="item-qty">Qty: {{ item.qty }}</div>
+          </div>
+          <div class="item-price">{{ item.price | currency }}</div>
+        </div>
+
+        <div class="breakdown">
+          <div class="br-row"><span>Subtotal</span><span>{{ subtotal() | currency }}</span></div>
+          <div class="br-row">
+            <span>Platform Fees</span>
+            <span>{{ fees() | currency }}</span>
+          </div>
+          <div class="br-row discount-row" *ngIf="discount() > 0">
+            <span class="with-icon green">
+              <svg viewBox="0 0 24 24" fill="none" width="13" stroke="currentColor" stroke-width="2">
+                <path d="m15 5 6.3 6.3a2.4 2.4 0 0 1 0 3.4L14.7 21a2.4 2.4 0 0 1-3.4 0L5 14.7V5z" />
+                <path d="M9 9h.01" />
+              </svg>
+              Discount Applied
+            </span>
+            <span class="green">-{{ discount() | currency }}</span>
+          </div>
+        </div>
+      </ng-container>
+      <ng-container *ngIf="isInvoice() && !orderService.isLoading()">
+        <div class="invoice-content">
+          <h2 class="invoice-main-title">INVOICE</h2>
+
+          <div class="invoice-meta-grid">
+            <div class="meta-item" *ngIf="customerName()">
+              <span class="meta-label">To</span>
+              <span class="meta-value">{{ customerName() }}</span>
+            </div>
+            <div class="meta-item" *ngIf="invoiceNo()">
+              <span class="meta-label">Invoice No.</span>
+              <span class="meta-value">{{ invoiceNo() }}</span>
+            </div>
+            <div class="meta-item" *ngIf="issueDate()">
+              <span class="meta-label">Issued On</span>
+              <span class="meta-value">{{ issueDate() | date:'dd-MM-yyyy' }}</span>
+            </div>
+            <div class="meta-item" *ngIf="merchantPhone() || merchantEmail()">
+              <span class="meta-label">From</span>
+              <div class="meta-value multi">
+                <div *ngIf="merchantPhone()">{{ merchantPhone() }}</div>
+                <div *ngIf="merchantEmail()">{{ merchantEmail() }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="invoice-table-container">
+            <table class="invoice-table">
+              <thead>
+                <tr>
+                  <th class="text-left">Item</th>
+                  <th class="text-center">Qty.</th>
+                  <th class="text-right">Rate</th>
+                  <th class="text-right">Amount AU</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of items()">
+                  <td class="text-left item-name-td">
+                    <div class="invoice-item-name">{{ item.name }}</div>
+                    <div *ngIf="item.desc" class="invoice-item-desc">{{ item.desc }}</div>
+                  </td>
+                  <td class="text-center">{{ item.qty | number:'2.0-0' }}</td>
+                  <td class="text-right">{{ item.price | number:'1.2-2' }}</td>
+                  <td class="text-right">{{ (item.price * item.qty) | number:'1.2-2' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="invoice-calc-footer">
+            <div class="calc-row">
+              <span class="calc-label">Subtotal</span>
+              <span class="calc-value">{{ subtotal() | number:'1.2-2' }}</span>
+            </div>
+            <div class="calc-row discount" *ngIf="discount() > 0">
+              <span class="calc-label pink-text">Discount</span>
+              <span class="calc-value pink-text">{{ discount() | number:'1.2-2' }}</span>
+            </div>
+            <div class="calc-row" *ngIf="gstEnabled()">
+              <span class="calc-label">Total Tax (GST)</span>
+              <span class="calc-value">{{ tax() | number:'1.2-2' }}</span>
+            </div>
+            <div class="calc-row" *ngIf="fees() > 0">
+              <span class="calc-label">Platform Fees</span>
+              <span class="calc-value">{{ fees() | number:'1.2-2' }}</span>
+            </div>
+            <div class="calc-total-row">
+              <span class="total-text">Total Amount</span>
+              <span class="total-val">{{ totalAmount() | currency }}</span>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+      <!-- <div class="promo-row" *ngIf="!isInvoice()">
+        <input type="text" class="promo-input" placeholder="Promo code">
+        <button class="apply-btn">Apply</button>
+      </div> -->
+
+      <div class="total-row" *ngIf="!isInvoice()">
+        <div>
+          <div class="total-label">Total</div>
+          <div class="gst-note" *ngIf="gstEnabled()">Including GST</div>
+        </div>
+        <div class="total-price">{{ totalAmount() | currency }}</div>
+      </div>
+      <div class="trust-row">
+        <span class="trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" width="12" height="12">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          Secure checkout
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="orderService.isError()" class="session-expired-container fade-in">
+  <div class="error-card">
+    <div class="error-icon-circle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" width="48" height="48">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+    </div>
+    <h2 style="margin: 0;">This link no longer active</h2>
+  </div>
+</div>

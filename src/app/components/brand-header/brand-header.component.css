@@ -1,0 +1,209 @@
+.brand-header {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 100;
+}
+
+.merchant-flex-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.mobile-price {
+  text-align: right;
+  display: block;
+}
+
+.m-price-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.1em;
+  margin-bottom: -2px;
+}
+
+.m-price-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: #10b981;
+}
+
+@media (min-width: 860px) {
+  .mobile-price {
+    display: none;
+  }
+}
+
+.logo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-name {
+  font-family: 'Space Grotesk';
+  font-size: 20px;
+  color: #f1f5f9;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+
+.brand-pay{
+  color: #10b77f;
+}
+
+.brand-name strong {
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+.merchant-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.paying-label {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  color: #475569;
+  font-weight: 500;
+}
+
+.verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #10b981;
+  background: rgba(16,185,129,0.1);
+  border: 1px solid rgba(16,185,129,0.2);
+  border-radius: 100px;
+  padding: 1px 6px;
+}
+
+.brand-logo-circle {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #fcd34d, #10b981);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+}
+.brand-logo-circle svg {
+  color: black;
+}
+
+.m-price-label {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: -4px;
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.merchant-visual {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.merchant-logo-main {
+  width: 48px;
+  height: 48px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.merchant-logo-main svg {
+  color: #10b981;
+}
+
+.merchant-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.merchant-badge-overlay {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 18px;
+  height: 18px;
+  background: #10b981;
+  border: 2px solid #020617;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.paying-to {
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 2px;
+}
+
+.verified-tag {
+  padding: 4px 8px;
+  color: #10b981;
+  border-radius: 12px;
+  background-color: #52c7a04d;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+}
+
+.merchant-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.merchant-name {
+  font-family: 'Space Grotesk';
+  font-size: 16px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+@media (max-width: 860px) {
+  .brand-header {
+    position: relative;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 24px 24px 8px; 
+    background: transparent;
+    gap: 16px;
+  }
+}
