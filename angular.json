@@ -57,7 +57,7 @@
                 }
               ],
               "outputHashing": "all",
-              "baseHref": "/checkout/"
+              "baseHref": "/"
             },
             "test": {
               "fileReplacements": [
@@ -67,13 +67,13 @@
                 }
               ],
               "outputHashing": "all",
-              "baseHref": "/checkout/"
+              "baseHref": "/"
             },
             "development": {
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true,
-              "baseHref": "/checkout/"
+              "baseHref": "/"
             }
           },
           "defaultConfiguration": "development"
