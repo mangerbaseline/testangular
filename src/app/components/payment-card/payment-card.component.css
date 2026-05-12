@@ -348,6 +348,18 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.item-icon-wrap.has-image {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.item-product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .item-body {

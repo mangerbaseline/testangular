@@ -270,11 +270,18 @@ export class PaymentCardComponent implements OnInit, AfterViewInit {
         if (res.status === 'Success') {
           this.clearTimer();
           this.showToast("Payment Successful!", "success");
+          // Always redirect to internal success page
+          const successPath = window.location.origin + window.location.pathname.replace(/\/$/, '') + '/success' + window.location.search;
+          window.location.href = successPath;
+
+          /*
           if (res.redirectURL) {
             window.location.href = res.redirectURL;
           } else {
-            this.paymentSuccess.emit();
+            const successPath = window.location.origin + window.location.pathname.replace(/\/$/, '') + '/success' + window.location.search;
+            window.location.href = successPath;
           }
+          */
         } else if (res.status === 'Failed') {
           this.clearTimer();
           this.showToast("Payment Failed", "error");
@@ -446,7 +453,8 @@ export class PaymentCardComponent implements OnInit, AfterViewInit {
           name: name,
           price: item.itemPrice || item.perItemPrice || item.amount || 0,
           desc: descParts.join(' | '),
-          qty: item.quantity || 1
+          qty: item.quantity || 1,
+          image: item.itemImage || ''
         };
       }));
     }
@@ -542,14 +550,12 @@ export class PaymentCardComponent implements OnInit, AfterViewInit {
   }
 
   async initStripeElement(id: string) {
-
     if (this.paymentElement) {
       try {
         this.paymentElement.unmount();
         this.paymentElement.destroy();
         this.paymentElement = null;
-      } catch (e) {
-      }
+      } catch (e) { }
     }
 
     const backendType = this.backendMap[id];
@@ -559,56 +565,42 @@ export class PaymentCardComponent implements OnInit, AfterViewInit {
     this.isStripeLoading.set(true);
 
     try {
-      const orderData = this.orderService.orderData();
-      if (!orderData) throw new Error("Order data not available");
+      if (!this.accessToken) return;
 
-      if (!this.accessToken) {
-        return;
-      }
+      // Map wallets to 'card' type for elements, but Stripe will handle the button
+      const elementTypes = (stripeType === 'apple_pay' || stripeType === 'google_pay') ? ['card'] : [stripeType];
 
-      // Hit createPaymentSession directly using the token from startApiFlow
-      this.orderService.createPaymentSession(this.accessToken, this.deviceId, this.orderID, backendType).subscribe({
-        next: (data) => {
-          if (!data.clientSecret) throw new Error("No clientSecret received from backend");
-
-          this.elements = this.stripe.elements({
-            clientSecret: data.clientSecret,
-            appearance: {
-              theme: 'night',
-              variables: {
-                colorPrimary: '#10b981',
-                colorBackground: '#1e293b',
-                colorText: '#ffffff',
-                borderRadius: '12px'
-              }
-            }
-          });
-
-
-          this.paymentElement = this.elements.create("payment", {
-            layout: 'tabs',
-            paymentMethodOrder: [stripeType]
-          });
-
-          setTimeout(() => {
-            const mountPoint = document.getElementById("stripe-payment-element-mount-point");
-            if (mountPoint && this.paymentElement) {
-              this.paymentElement.mount("#stripe-payment-element-mount-point");
-            }
-          }, 50);
-
-          this.paymentElement.on('ready', () => {
-            this.isStripeLoading.set(false);
-          });
-
-          this.paymentElement.on('change', (event: any) => {
-            if (event.error) {
-            }
-          });
-        },
-        error: (err) => {
-          this.isStripeLoading.set(false);
+      // Initialize Elements in Deferred Mode
+      this.elements = this.stripe.elements({
+        mode: 'payment',
+        amount: Math.round(this.totalAmount() * 100),
+        currency: 'aud',
+        payment_method_types: elementTypes,
+        appearance: {
+          theme: 'night',
+          variables: {
+            colorPrimary: '#10b981',
+            colorBackground: '#1e293b',
+            colorText: '#ffffff',
+            borderRadius: '12px'
+          }
         }
+      });
+
+      this.paymentElement = this.elements.create("payment", {
+        layout: 'tabs',
+        paymentMethodOrder: elementTypes,
+      });
+
+      setTimeout(() => {
+        const mountPoint = document.getElementById("stripe-payment-element-mount-point");
+        if (mountPoint && this.paymentElement) {
+          this.paymentElement.mount("#stripe-payment-element-mount-point");
+        }
+      }, 50);
+
+      this.paymentElement.on('ready', () => {
+        this.isStripeLoading.set(false);
       });
 
     } catch (e: any) {
@@ -836,24 +828,51 @@ export class PaymentCardComponent implements OnInit, AfterViewInit {
 
     if (this.isStripeMethod() && this.paymentElement) {
       try {
-        const result = await this.stripe.confirmPayment({
-          elements: this.elements,
-          confirmParams: {
-            return_url: window.location.origin + window.location.pathname.replace(/\/$/, '') + '/success' + window.location.search,
-          },
-          redirect: 'if_required'
-        });
-
-
-        if (result.error) {
-          this.showToast(result.error.message || "Payment Error", "error");
+        // 1. Validate inputs first
+        const { error: submitError } = await this.elements.submit();
+        if (submitError) {
+          this.showToast(submitError.message || "Please check your payment details", "error");
           this.isProcessing.set(false);
-        } else {
-          this.showToast("Payment Successful! Redirecting...", "success");
-          setTimeout(() => {
-            window.location.href = window.location.origin + window.location.pathname.replace(/\/$/, '') + '/success' + window.location.search;
-          }, 2000);
+          return;
         }
+
+        const currentId = this.selectedMethod();
+        const backendType = this.backendMap[currentId];
+
+        // 2. NOW hit the backend to create the Payment Intent
+        this.orderService.createPaymentSession(this.accessToken, this.deviceId, this.orderID, backendType).subscribe({
+          next: async (data) => {
+            if (!data.clientSecret) {
+              this.showToast("Failed to create payment session", "error");
+              this.isProcessing.set(false);
+              return;
+            }
+
+            // 3. Confirm the payment with the received clientSecret
+            const result = await this.stripe.confirmPayment({
+              elements: this.elements,
+              clientSecret: data.clientSecret,
+              confirmParams: {
+                return_url: window.location.origin + window.location.pathname.replace(/\/$/, '') + '/success' + window.location.search,
+              },
+              redirect: 'if_required'
+            });
+
+            if (result.error) {
+              this.showToast(result.error.message || "Payment Error", "error");
+              this.isProcessing.set(false);
+            } else {
+              this.showToast("Payment Successful! Redirecting...", "success");
+              setTimeout(() => {
+                window.location.href = window.location.origin + window.location.pathname.replace(/\/$/, '') + '/success' + window.location.search;
+              }, 2000);
+            }
+          },
+          error: (err) => {
+            this.showToast("Server error. Please try again.", "error");
+            this.isProcessing.set(false);
+          }
+        });
       } catch (e) {
         this.isProcessing.set(false);
       }

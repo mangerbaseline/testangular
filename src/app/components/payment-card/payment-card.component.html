@@ -425,8 +425,9 @@
       </div>
       <ng-container *ngIf="!isInvoice() && !orderService.isLoading()">
         <div class="item-row" *ngFor="let item of items()">
-          <div class="item-icon-wrap">
-            <svg viewBox="0 0 24 24" fill="none" width="18" stroke="currentColor" stroke-width="2">
+          <div class="item-icon-wrap" [class.has-image]="item.image">
+            <img *ngIf="item.image" [src]="item.image" class="item-product-image" alt="Product">
+            <svg *ngIf="!item.image" viewBox="0 0 24 24" fill="none" width="18" stroke="currentColor" stroke-width="2">
               <path
                 d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
               <path d="m3.3 7 8.7 5 8.7-5" />
