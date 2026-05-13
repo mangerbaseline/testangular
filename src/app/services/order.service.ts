@@ -91,5 +91,14 @@ export class OrderService {
   getTicketByMerchantId(merchantID: string): Observable<any> {
     return this.http.get(`${this.backendApi}/getTicketByMerchantId/${merchantID}`);
   }
+
+  getPlateformFees(orderID: string, paymentType: string, token: string, deviceId: string): Observable<any> {
+    const headers = new HttpHeaders({
+      'access_token': token,
+      'deviceid': deviceId,
+      'Content-Type': 'application/json'
+    });
+    return this.http.post(`${this.backendApi}/payments/getPlateformFees`, { orderID, paymentType }, { headers });
+  }
 }
 

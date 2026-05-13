@@ -417,21 +417,7 @@ export class PaymentCardComponent implements OnInit, AfterViewInit {
   }
 
   private handleOrderResponse(orderData: any) {
-    if (orderData.orderedThrough === 'QR' && orderData.qrTableData) {
-      const qr = orderData.qrTableData;
-      const parts = [];
-      if (qr.name) parts.push(`Name: ${qr.name}`);
-      if (qr.email) parts.push(`Email: ${qr.email}`);
-      if (qr.phone) parts.push(`Phone: ${qr.phone}`);
-      if (qr.tableNumber) parts.push(`Location: ${qr.tableNumber}`);
-
-      this.items.set([{
-        name: 'QR Payment',
-        price: orderData.amount || 0,
-        desc: parts.join(' | '),
-        qty: orderData.qrTableData.quantity || 1
-      }]);
-    } else if (Array.isArray(orderData.menuList)) {
+    if (Array.isArray(orderData.menuList) && orderData.menuList.length > 0) {
       const filteredList = orderData.menuList.filter((item: any) => {
         const price = item.itemPrice || item.perItemPrice || item.amount || 0;
         return price > 0;
@@ -457,6 +443,20 @@ export class PaymentCardComponent implements OnInit, AfterViewInit {
           image: item.itemImage || ''
         };
       }));
+    } else if (orderData.orderedThrough === 'QR' && orderData.qrTableData) {
+      const qr = orderData.qrTableData;
+      const parts = [];
+      if (qr.name) parts.push(`Name: ${qr.name}`);
+      if (qr.email) parts.push(`Email: ${qr.email}`);
+      if (qr.phone) parts.push(`Phone: ${qr.phone}`);
+      if (qr.tableNumber) parts.push(`Location: ${qr.tableNumber}`);
+
+      this.items.set([{
+        name: 'QR Payment',
+        price: orderData.amount || 0,
+        desc: parts.join(' | '),
+        qty: orderData.qrTableData.quantity || 1
+      }]);
     }
 
     // Sum up items for true subtotal (matching your image: 50 + 20 + 200 = 270)
@@ -468,11 +468,8 @@ export class PaymentCardComponent implements OnInit, AfterViewInit {
     this.discount.set(orderData.discount || 0);
     this.gstEnabled.set(!!orderData.gstEnabled);
 
-    // Calculate total: subtotal - discount + tax + fees (matching image: 270 - 50 + 22 = 242)
-    const calculatedTotal = this.subtotal() - this.discount() + (this.gstEnabled() ? this.tax() : 0) + this.fees();
-    this.totalAmount.set(calculatedTotal);
-
-    this.totalAmountChange.emit(this.totalAmount());
+    // Calculate initial total
+    this.calculateTotal();
     this.isInvoice.set(orderData.orderedThrough === 'invoice');
     if (orderData.invoiceDetails) {
       this.invoiceNo.set(orderData.invoiceDetails.invoiceNo || '');
@@ -484,6 +481,31 @@ export class PaymentCardComponent implements OnInit, AfterViewInit {
       this.merchantEmail.set(orderData.merchantData.email || '');
       this.merchantPhone.set(orderData.merchantData.mobile || '');
     }
+  }
+
+  updatePlatformFees(paymentType: string) {
+    if (!this.orderID || !this.accessToken || !this.deviceId) return;
+
+    const mappedType = this.backendMap[paymentType] || paymentType;
+
+    this.orderService.getPlateformFees(this.orderID, mappedType, this.accessToken, this.deviceId).subscribe({
+      next: (res) => {
+        if (res && res.data) {
+          this.fees.set(res.data.plateformFees || 0);
+          this.calculateTotal();
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching platform fees:', err);
+      }
+    });
+  }
+
+  calculateTotal() {
+    const calculatedTotal = this.subtotal() - this.discount() + (this.gstEnabled() ? this.tax() : 0) + this.fees();
+    this.totalAmount.set(calculatedTotal);
+    this.orderService.totalAmount.set(calculatedTotal); // Synchronize with global service for mobile header
+    this.totalAmountChange.emit(this.totalAmount());
   }
 
   private filterMethods(apiMethods: string[]) {
@@ -529,9 +551,12 @@ export class PaymentCardComponent implements OnInit, AfterViewInit {
 
     if (!isAvailable) {
       this.selectMethod(this.methods[0]?.id || 'card');
-    } else if (this.isStripeMethod()) {
-      // Ensure initial load hits createPaymentSession by forcing init
-      this.initStripeElement(current);
+    } else {
+      // Fetch fees for the initial/restored method
+      this.updatePlatformFees(current);
+      if (this.isStripeMethod()) {
+        this.initStripeElement(current);
+      }
     }
 
     this.cdr.detectChanges();
@@ -728,6 +753,7 @@ export class PaymentCardComponent implements OnInit, AfterViewInit {
 
     this.selectedMethod.set(id);
     this.methodChange.emit(id);
+    this.updatePlatformFees(id);
 
     if (id === 'payto' && this.paytoState() === 'failed') {
       this.paytoState.set('input');
