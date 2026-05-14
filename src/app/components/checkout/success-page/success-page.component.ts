@@ -6,6 +6,8 @@ import { OrderService } from '../../../services/order.service';
 import * as CryptoJS from 'crypto-js';
 import { toPng, toBlob } from 'html-to-image';
 import { environment } from '../../../../environments/environment';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 @Component({
   selector: 'app-success-page',
@@ -206,38 +208,54 @@ export class SuccessPageComponent implements OnInit, OnDestroy {
     const node = document.getElementById('receipt-content');
     if (!node) return;
 
-    // Small delay to ensure any dynamic styles or images are fully painted
-    await new Promise(resolve => setTimeout(resolve, 300));
-
-    const options = {
-      backgroundColor: '#020617',
-      cacheBust: true,
-      skipFonts: true,
-      pixelRatio: 2, // High quality
-      style: {
-        borderRadius: '24px',
-        padding: '20px'
-      }
-    };
+    this.orderService.isLoading.set(true);
+    this.orderService.loadingMessage.set('Preparing your PDF receipt...');
 
     try {
-      const dataUrl = await toPng(node, options);
-      const link = document.createElement('a');
-      link.download = `Receipt-${this.orderService.orderData()?.txn_id || 'KuberPay'}.png`;
-      link.href = dataUrl;
-      link.click();
-    } catch (error) {
-      try {
-        const dataUrl = await toPng(node, { ...options, filter: (n: any) => n.tagName !== 'IMG' });
-        const link = document.createElement('a');
-        link.download = `Receipt-${this.orderService.orderData()?.txn_id || 'KuberPay'}-Simple.png`;
-        link.href = dataUrl;
-        link.click();
-      } catch (err) {
+      const dataUrl = await toPng(node, {
+        backgroundColor: '#020617',
+        pixelRatio: 2,
+        skipFonts: true,
+        cacheBust: true,
+        style: {
+          paddingBottom: '60px'
+        }
+      });
+
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgProps = pdf.getImageProperties(dataUrl);
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      
+      const finalWidth = pageWidth;
+      const finalHeight = (imgProps.height * pageWidth) / imgProps.width;
+
+      // Multi-page logic
+      let heightLeft = finalHeight;
+      let position = 0; // Top position of the image on the current page
+      const xOffset = 0; // Align to left since we are using full width
+
+      // Add the first page
+      pdf.addImage(dataUrl, 'PNG', xOffset, position, finalWidth, finalHeight, undefined, 'FAST');
+      heightLeft -= pageHeight;
+
+      // Add subsequent pages if content remains
+      while (heightLeft > 0) {
+        position = heightLeft - finalHeight; // Offset the image upwards to show the next segment
+        pdf.addPage();
+        pdf.addImage(dataUrl, 'PNG', xOffset, position, finalWidth, finalHeight, undefined, 'FAST');
+        heightLeft -= pageHeight;
       }
+
+      pdf.save(`Receipt-${this.orderService.orderData()?.txn_id || 'KuberPay'}.pdf`);
+      
+      this.orderService.isLoading.set(false);
+    } catch (error) {
+      console.error('PDF generation failed:', error);
+      this.orderService.isLoading.set(false);
+      window.print();
     }
   }
-
   async shareReceipt() {
     const node = document.getElementById('receipt-content');
     if (!node) return;

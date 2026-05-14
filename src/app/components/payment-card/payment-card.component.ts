@@ -30,6 +30,8 @@ export class PaymentCardComponent implements OnInit, AfterViewInit {
   isProcessing = signal(false);
   isStripeLoading = signal(false);
   showSummary = signal(true);
+  
+  private feeCache: { [key: string]: number } = {};
 
   items = signal<any[]>([]);
   subtotal = signal(0);
@@ -349,6 +351,7 @@ export class PaymentCardComponent implements OnInit, AfterViewInit {
   }
 
   async startApiFlow() {
+    this.feeCache = {}; // Clear cache when starting/refreshing a session for total safety
     this.orderService.isLoading.set(true);
     this.orderService.loadingMessage.set('Setting up your secure payment session...');
 
@@ -488,10 +491,21 @@ export class PaymentCardComponent implements OnInit, AfterViewInit {
 
     const mappedType = this.backendMap[paymentType] || paymentType;
 
+    // FIX: Check cache first to avoid backend intent hits
+    if (this.feeCache[mappedType] !== undefined) {
+      console.log(`[Fee Cache] Using cached fees for ${mappedType}:`, this.feeCache[mappedType]);
+      this.fees.set(this.feeCache[mappedType]);
+      this.calculateTotal();
+      return;
+    }
+
+    console.log(`[API Hit] Fetching platform fees from backend for: ${mappedType}`);
     this.orderService.getPlateformFees(this.orderID, mappedType, this.accessToken, this.deviceId).subscribe({
       next: (res) => {
         if (res && res.data) {
-          this.fees.set(res.data.plateformFees || 0);
+          const fee = res.data.plateformFees || 0;
+          this.feeCache[mappedType] = fee;
+          this.fees.set(fee);
           this.calculateTotal();
         }
       },
@@ -575,42 +589,52 @@ export class PaymentCardComponent implements OnInit, AfterViewInit {
   }
 
   async initStripeElement(id: string) {
-    if (this.paymentElement) {
-      try {
-        this.paymentElement.unmount();
-        this.paymentElement.destroy();
-        this.paymentElement = null;
-      } catch (e) { }
-    }
-
     const backendType = this.backendMap[id];
     if (!backendType) return;
 
     const stripeType = this.stripeTypeMap[backendType];
+    const amountInCents = Math.round(this.totalAmount() * 100);
+    
+    if (amountInCents <= 0) return;
+
     this.isStripeLoading.set(true);
 
     try {
       if (!this.accessToken) return;
-
-      // Map wallets to 'card' type for elements, but Stripe will handle the button
       const elementTypes = (stripeType === 'apple_pay' || stripeType === 'google_pay') ? ['card'] : [stripeType];
 
-      // Initialize Elements in Deferred Mode
-      this.elements = this.stripe.elements({
-        mode: 'payment',
-        amount: Math.round(this.totalAmount() * 100),
-        currency: 'aud',
-        payment_method_types: elementTypes,
-        appearance: {
-          theme: 'night',
-          variables: {
-            colorPrimary: '#10b981',
-            colorBackground: '#1e293b',
-            colorText: '#ffffff',
-            borderRadius: '12px'
+      // FIX: Reuse elements instance to stop repeated intent hits in dashboard
+      if (!this.elements) {
+        console.log(`[Stripe Hit] Initializing Stripe Elements for: ${id}`);
+        this.elements = this.stripe.elements({
+          mode: 'payment',
+          amount: amountInCents,
+          currency: 'aud',
+          payment_method_types: elementTypes,
+          appearance: {
+            theme: 'night',
+            variables: {
+              colorPrimary: '#10b981',
+              colorBackground: '#1e293b',
+              colorText: '#ffffff',
+              borderRadius: '12px'
+            }
           }
-        }
-      });
+        });
+      } else {
+        console.log(`[Stripe Update] Updating existing elements instance for: ${id}`);
+        this.elements.update({
+          amount: amountInCents,
+          paymentMethodTypes: elementTypes
+        });
+      }
+
+      if (this.paymentElement) {
+        try {
+          this.paymentElement.unmount();
+          this.paymentElement.destroy();
+        } catch (e) {}
+      }
 
       this.paymentElement = this.elements.create("payment", {
         layout: 'tabs',
@@ -629,6 +653,7 @@ export class PaymentCardComponent implements OnInit, AfterViewInit {
       });
 
     } catch (e: any) {
+      console.error('[Stripe Error]', e);
       this.isStripeLoading.set(false);
     }
   }
@@ -739,6 +764,12 @@ export class PaymentCardComponent implements OnInit, AfterViewInit {
   }
 
   async selectMethod(id: string) {
+    if (this.selectedMethod() === id) {
+      console.log(`[Tab Switch] ${id} already selected. Skipping hits.`);
+      return;
+    }
+    console.log(`[Tab Switch] Processing switch to: ${id}`);
+
     if (id === 'upi' || id === 'bank') {
       this.showToast("Coming soon...", "info");
       return;
